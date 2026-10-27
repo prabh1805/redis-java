@@ -1,10 +1,15 @@
 package com.prabh.redis;
 
+import com.prabh.redis.net.ByteReader;
+import com.prabh.redis.protocol.RespParser;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 
 public class Server {
     ServerSocket serverSocket;
@@ -27,11 +32,13 @@ public class Server {
                 try {
                     InputStream in = clientSocket.getInputStream();
                     OutputStream out = clientSocket.getOutputStream();
-                    byte[] buffer = new byte[1024];
+                    ByteReader reader = new ByteReader(clientSocket.getInputStream());
+                    RespParser parser = new RespParser(reader);
                     while (true) {
-                        int bytesRead = in.read(buffer);
-                        if (bytesRead == -1) break;
-                        System.out.println(new String(buffer, 0, bytesRead));
+                        List<byte[]> command = parser.readCommand();
+                        for (byte[] bytes : command) {
+                            System.out.println(new String(bytes));
+                        }
                         out.write("+PONG\r\n".getBytes());
                         out.flush();
                     }

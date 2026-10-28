@@ -1,5 +1,6 @@
 package com.prabh.redis;
 
+import com.prabh.redis.command.CommandHandler;
 import com.prabh.redis.net.ByteReader;
 import com.prabh.redis.protocol.RespParser;
 
@@ -30,17 +31,16 @@ public class Server {
 
             Thread.ofVirtual().start(() -> {
                 try {
-                    InputStream in = clientSocket.getInputStream();
                     OutputStream out = clientSocket.getOutputStream();
                     ByteReader reader = new ByteReader(clientSocket.getInputStream());
                     RespParser parser = new RespParser(reader);
+                    CommandHandler handler = new CommandHandler(out);
                     while (true) {
                         List<byte[]> command = parser.readCommand();
                         for (byte[] bytes : command) {
                             System.out.println(new String(bytes));
                         }
-                        out.write("+PONG\r\n".getBytes());
-                        out.flush();
+                        handler.handle(command);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

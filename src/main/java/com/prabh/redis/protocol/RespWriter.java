@@ -35,7 +35,14 @@ public class RespWriter {
         out.write("$-1\r\n".getBytes(StandardCharsets.UTF_8));
     }
 
+    public void writeInteger(long num) throws IOException{
+        String res = ":" + num + "\r\n";
+        out.write(res.getBytes(StandardCharsets.UTF_8));
+    }
+
     public void flush() throws IOException {
         out.flush();
     }
+
+
 }

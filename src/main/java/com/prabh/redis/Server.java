@@ -7,11 +7,9 @@ import com.prabh.redis.protocol.RespWriter;
 import com.prabh.redis.store.Keyspace;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 
 public class Server {
@@ -21,7 +19,7 @@ public class Server {
         serverSocket = new ServerSocket(6379);
     }
 
-    public Socket acceptClient() throws IOException {   // ← renamed
+    public Socket acceptClient() throws IOException {
         return serverSocket.accept();
     }
 
@@ -33,7 +31,7 @@ public class Server {
             System.out.println(clientSocket.getRemoteSocketAddress());
 
             Thread.ofVirtual().start(() -> {
-                try(Socket socket = clientSocket) {
+                try (clientSocket) {
                     OutputStream out = clientSocket.getOutputStream();
                     ByteReader reader = new ByteReader(clientSocket.getInputStream());
                     RespParser parser = new RespParser(reader);

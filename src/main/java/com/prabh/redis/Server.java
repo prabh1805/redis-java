@@ -4,6 +4,7 @@ import com.prabh.redis.command.CommandHandler;
 import com.prabh.redis.net.ByteReader;
 import com.prabh.redis.protocol.RespParser;
 import com.prabh.redis.protocol.RespWriter;
+import com.prabh.redis.store.Keyspace;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         Server server = new Server();
+        Keyspace keyspace = new Keyspace();
         while(true){
             Socket clientSocket = server.acceptClient();
             System.out.println(clientSocket.getRemoteSocketAddress());
@@ -36,7 +38,7 @@ public class Server {
                     ByteReader reader = new ByteReader(clientSocket.getInputStream());
                     RespParser parser = new RespParser(reader);
                     RespWriter respWriter = new RespWriter(out);
-                    CommandHandler handler = new CommandHandler(respWriter);
+                    CommandHandler handler = new CommandHandler(respWriter, keyspace);
                     while (true) {
                         List<byte[]> command = parser.readCommand();
                         for (byte[] bytes : command) {

@@ -1,6 +1,8 @@
 package com.prabh.redis.command;
 
 import com.prabh.redis.protocol.RespWriter;
+import com.prabh.redis.store.Key;
+import com.prabh.redis.store.Keyspace;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,9 +10,11 @@ import java.util.List;
 
 public class CommandHandler {
     private final RespWriter respWriter;
+    private final Keyspace keyspace;
 
-    public CommandHandler(RespWriter respWriter) {
+    public CommandHandler(RespWriter respWriter, Keyspace keyspace) {
         this.respWriter = respWriter;
+        this.keyspace = keyspace;
     }
 
     public void handle(List<byte[]> command) throws IOException {
@@ -23,6 +27,26 @@ public class CommandHandler {
                     respWriter.writeError("ERR wrong number of arguments for 'echo' command");
                 } else {
                     respWriter.writeBulkString(command.get(1));
+                }
+            }
+            case "SET" -> {
+                if (command.size() != 3) {
+                    respWriter.writeError("ERR wrong number of arguments for 'set' command");
+                } else {
+                    keyspace.set(new Key(command.get(1)), command.get(2));
+                    respWriter.writeSimpleString("OK");
+                }
+            }
+            case "GET" -> {
+                if (command.size() != 2) {
+                    respWriter.writeError("ERR wrong number of arguments for 'get' command");
+                } else {
+                    byte[] value = keyspace.get(new Key(command.get(1)));
+                    if (value == null) {
+                        respWriter.writeNull();
+                    } else {
+                        respWriter.writeBulkString(value);
+                    }
                 }
             }
             default -> respWriter.writeError("ERR unknown command");

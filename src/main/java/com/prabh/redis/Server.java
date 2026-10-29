@@ -28,7 +28,6 @@ public class Server {
         Keyspace keyspace = new Keyspace();
         while(true){
             Socket clientSocket = server.acceptClient();
-            System.out.println(clientSocket.getRemoteSocketAddress());
 
             Thread.ofVirtual().start(() -> {
                 try (clientSocket) {
@@ -40,9 +39,6 @@ public class Server {
                     while (true) {
                         List<byte[]> command = parser.readCommand();
                         if(command == null) break;
-                        for (byte[] bytes : command) {
-                            System.out.println(new String(bytes));
-                        }
                         handler.handle(command);
                     }
                 } catch (IOException e) {

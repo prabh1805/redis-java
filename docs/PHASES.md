@@ -2,7 +2,8 @@
 
 Build order. Each phase ends in a server that runs and does something visible.
 
-**Status: nothing started.** Update the checkboxes as phases complete.
+**Status: phase 1 functionally done, a few loose ends open. Phase 2 next.**
+Update the checkboxes as phases complete.
 
 ---
 
@@ -38,12 +39,31 @@ the point.
 
 **Build**
 
-- Accept loop, one virtual thread per connection
-- RESP parser: simple strings, errors, integers, bulk strings, arrays
-- RESP serializer
-- Command dispatch
-- `PING`, `ECHO`, `SET`, `GET`, `DEL`, `EXISTS`
-- Keyspace as `HashMap<byte[]-wrapper, Value>`
+- [x] Accept loop, one virtual thread per connection
+- [x] RESP parser — reads arrays of bulk strings, which is all a client sends.
+      Other types aren't parsed (only needed later, e.g. reading replies as a replica)
+- [x] RESP serializer — simple string, error, integer, bulk string, null.
+      Array writer still missing (phase 2 needs it for `LRANGE` etc.)
+- [x] Command dispatch
+- [x] `PING`, `ECHO`, `SET`, `GET`, `DEL`, `EXISTS`
+- [x] Keyspace — `ConcurrentHashMap<Key, byte[]>`. Values become a `Value`
+      type in phase 2
+
+**Loose ends** (found in review after the build list was done — not part of the
+original plan)
+
+- [ ] A value containing byte `0xFF` drops the connection: `ByteReader.read()`
+      returns the signed byte, so `0xFF` comes back as `-1` and looks like
+      end-of-stream. Breaks binary safety
+- [ ] An empty command (`*0`) throws `IndexOutOfBoundsException` and kills the
+      client's thread without a reply
+- [ ] `DEL` / `EXISTS` take one key only; real Redis accepts many and returns a count
+- [ ] Client disconnect logs a `Protocol error: expected '*'` stack trace —
+      treat end-of-stream as a clean close
+- [ ] Parser doesn't reject malformed input (non-digit lengths, negative counts)
+- [ ] `Key` keeps the caller's array instead of copying it
+- [ ] Remove the per-command debug `println` in `Server`
+- [ ] No tests yet
 
 **Decide early:** keys as `byte[]`, not `String`. Redis keys are binary-safe and
 retrofitting this later means touching everything. A wrapper class with proper
@@ -52,6 +72,9 @@ retrofitting this later means touching everything. A wrapper class with proper
 **Done when:** `redis-cli -p 6379` connects, `SET foo bar` returns `OK`,
 `GET foo` returns `bar`, and `redis-cli` doesn't complain about malformed
 replies.
+
+✅ Verified 2026-10-29 with `redis-cli` 8.10.1: all six commands, arity errors
+and unknown-command error reply correctly.
 
 ---
 

@@ -18,6 +18,9 @@ public class CommandHandler {
     }
 
     public void handle(List<byte[]> command) throws IOException {
+        if(command.isEmpty()){
+            return;
+        }
         String name = new String(command.get(0), StandardCharsets.UTF_8).toUpperCase();
 
         switch (name) {

@@ -3,6 +3,7 @@ package com.prabh.redis;
 import com.prabh.redis.command.CommandHandler;
 import com.prabh.redis.net.ByteReader;
 import com.prabh.redis.protocol.RespParser;
+import com.prabh.redis.protocol.RespWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,8 @@ public class Server {
                     OutputStream out = clientSocket.getOutputStream();
                     ByteReader reader = new ByteReader(clientSocket.getInputStream());
                     RespParser parser = new RespParser(reader);
-                    CommandHandler handler = new CommandHandler(out);
+                    RespWriter respWriter = new RespWriter(out);
+                    CommandHandler handler = new CommandHandler(respWriter);
                     while (true) {
                         List<byte[]> command = parser.readCommand();
                         for (byte[] bytes : command) {

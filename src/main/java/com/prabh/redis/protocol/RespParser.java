@@ -17,6 +17,9 @@ public class RespParser {
         int res = 0;
         int b = byteReader.read();
         while(b != '\r'){
+            if(b == -1) {
+                throw new IOException("Client disconnected");
+            }
             res = res * 10 + b - '0';
             b = byteReader.read();
         }
@@ -28,6 +31,9 @@ public class RespParser {
         List<byte[]> command = new ArrayList<>();
 
         int type = byteReader.read();
+        if (type == -1) {
+            return null;          // client closed cleanly, nothing more coming
+        }
         if (type != '*') {
             throw new IOException("Protocol error: expected '*'");
         }

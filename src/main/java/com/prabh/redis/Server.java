@@ -33,7 +33,7 @@ public class Server {
             System.out.println(clientSocket.getRemoteSocketAddress());
 
             Thread.ofVirtual().start(() -> {
-                try {
+                try(Socket socket = clientSocket) {
                     OutputStream out = clientSocket.getOutputStream();
                     ByteReader reader = new ByteReader(clientSocket.getInputStream());
                     RespParser parser = new RespParser(reader);
@@ -41,6 +41,7 @@ public class Server {
                     CommandHandler handler = new CommandHandler(respWriter, keyspace);
                     while (true) {
                         List<byte[]> command = parser.readCommand();
+                        if(command == null) break;
                         for (byte[] bytes : command) {
                             System.out.println(new String(bytes));
                         }

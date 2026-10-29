@@ -21,7 +21,8 @@ public class ByteReader {
                 return -1;
             }
         }
-        return tray[position++];
+        // without the mask, byte 255 returns -1 and looks like a disconnect
+        return tray[position++] & 0xFF;
     }
 
     public byte[] readN(int n) throws IOException{

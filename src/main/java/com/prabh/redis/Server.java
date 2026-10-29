@@ -26,6 +26,7 @@ public class Server {
     public static void main(String[] args) throws IOException {
         Server server = new Server();
         Keyspace keyspace = new Keyspace();
+        System.out.println("Listening on port " + server.serverSocket.getLocalPort());
         while(true){
             Socket clientSocket = server.acceptClient();
 

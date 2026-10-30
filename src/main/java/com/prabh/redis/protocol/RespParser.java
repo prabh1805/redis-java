@@ -20,6 +20,9 @@ public class RespParser {
             if(b == -1) {
                 throw new IOException("Client disconnected");
             }
+            if (b < '0' || b > '9') {
+                throw new IOException("Protocol error: invalid character in length");
+            }
             res = res * 10 + b - '0';
             b = byteReader.read();
         }
@@ -40,15 +43,24 @@ public class RespParser {
 
         int count = readInteger();
 
+
         for (int i = 0; i < count; i++) {
             int elementType = byteReader.read();
             if (elementType != '$') {
                 throw new IOException("Protocol error: expected '$'");
             }
             int length = readInteger();
+            if (length < 0 || length > 512 * 1024 * 1024) {
+                throw new IOException("Protocol error: invalid bulk length");
+            }
             command.add(byteReader.readN(length));
-            byteReader.read();   // \r
-            byteReader.read();   // \n
+
+            if (byteReader.read() != '\r') {
+                throw new IOException("Protocol error: expected CR after bulk string");
+            }
+            if (byteReader.read() != '\n') {
+                throw new IOException("Protocol error: expected LF after bulk string");
+            }
         }
 
         return command;

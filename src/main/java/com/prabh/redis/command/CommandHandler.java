@@ -53,19 +53,26 @@ public class CommandHandler {
                 }
             }
             case "EXISTS" -> {
-                if (command.size() != 2) {
+                if (command.size() < 2) {
                     respWriter.writeError("ERR wrong number of arguments for 'exists' command");
                 }else{
-                    int res = keyspace.exists(new Key(command.get(1))) ? 1 : 0;
-                    respWriter.writeInteger(res);
+                    int cnt = 0;
+                    for(int i = 1; i < command.size(); i++){
+                        cnt += keyspace.exists(new Key(command.get(i))) ? 1 : 0;
+                    }
+
+                    respWriter.writeInteger(cnt);
                 }
             }
             case "DEL" -> {
-                if (command.size() != 2) {
+                if (command.size() < 2) {
                     respWriter.writeError("ERR wrong number of arguments for 'del' command");
                 }else{
-                    int res = keyspace.delete(new Key(command.get(1))) ? 1 : 0;
-                    respWriter.writeInteger(res);
+                    int cnt = 0;
+                    for(int i = 1; i < command.size(); i++){
+                        cnt += keyspace.delete(new Key(command.get(i))) ? 1 : 0;
+                    }
+                    respWriter.writeInteger(cnt);
                 }
             }
             default -> respWriter.writeError("ERR unknown command");

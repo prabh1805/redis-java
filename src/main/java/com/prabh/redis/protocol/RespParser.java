@@ -13,14 +13,19 @@ public class RespParser {
         this.byteReader = byteReader;
     }
 
+    private int readMidCommand() throws IOException {
+        int b = byteReader.read();
+        if (b == -1) {
+            throw new IOException("Client disconnected mid-command");
+        }
+        return b;
+    }
+
     private int readInteger() throws IOException {
         int res = 0;
-        int b = byteReader.read();
+        int b = readMidCommand();
         boolean sawDigit = false;
         while (b != '\r') {
-            if (b == -1) {
-                throw new IOException("Client disconnected mid-command");
-            }
             if (b < '0' || b > '9') {
                 throw new ProtocolException("invalid character in length");
             }
@@ -29,12 +34,12 @@ public class RespParser {
             }
             sawDigit = true;
             res = res * 10 + b - '0';
-            b = byteReader.read();
+            b = readMidCommand();
         }
         if (!sawDigit) {
             throw new ProtocolException("empty length");
         }
-        if (byteReader.read() != '\n') {
+        if (readMidCommand() != '\n') {
             throw new ProtocolException("expected LF after length");
         }
         return res;
@@ -54,7 +59,7 @@ public class RespParser {
         int count = readInteger();
 
         for (int i = 0; i < count; i++) {
-            int elementType = byteReader.read();
+            int elementType = readMidCommand();
             if (elementType != '$') {
                 throw new ProtocolException("expected '$'");
             }
@@ -64,10 +69,10 @@ public class RespParser {
             }
             command.add(byteReader.readN(length));
 
-            if (byteReader.read() != '\r') {
+            if (readMidCommand() != '\r') {
                 throw new ProtocolException("expected CR after bulk string");
             }
-            if (byteReader.read() != '\n') {
+            if (readMidCommand() != '\n') {
                 throw new ProtocolException("expected LF after bulk string");
             }
         }

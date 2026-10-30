@@ -24,7 +24,15 @@ public class CommandHandler {
         String name = new String(command.get(0), StandardCharsets.UTF_8).toUpperCase();
 
         switch (name) {
-            case "PING" -> respWriter.writeSimpleString("PONG");
+            case "PING" -> {
+                if (command.size() > 2) {
+                    respWriter.writeError("ERR wrong number of arguments for 'ping' command");
+                } else if (command.size() == 2) {
+                    respWriter.writeBulkString(command.get(1));
+                } else {
+                    respWriter.writeSimpleString("PONG");
+                }
+            }
             case "ECHO" -> {
                 if (command.size() != 2) {
                     respWriter.writeError("ERR wrong number of arguments for 'echo' command");
